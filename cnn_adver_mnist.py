@@ -1,5 +1,6 @@
 import tensorflow as tf
 import pickle as pk
+import numpy as np
 config = tf.ConfigProto()
 config.gpu_options.per_process_gpu_memory_fraction = 0.4
 
@@ -20,17 +21,26 @@ class Attack_Model():
         self.loss_object = tf.keras.losses.CategoricalCrossentropy()
 
     def create_adversarial_pattern(self):
-        self.predictions = self.model.predict(self.test_images)
-        with tf.GradientTape() as tape:
-            for i in range(self.test_images.shape[0]):
-                self.test_images = self.test_images[:, :, :, 0]
-                self.test_image = self.test_images[i, :]
-                self.test_image = self.test_image[None, ...]
-                tape.watch(tf.convert_to_tensor(self.test_image))
-                self.losses = self.loss_object(self.test_labels[i, :], self.predictions[i, :])
-
-                self.gradients = tape.gradient(self.losses, tf.convert_to_tensor(self.test_image))
+        for i in range(self.test_images.shape[0]):
+            # self.test_images = self.test_images[:, :, :, 0]
+            # self.test_image = self.test_images[i, :]
+            # self.test_image = tf.convert_to_tensor(self.test_image)
+            self.test_image = self.test_images[i, :]
+            self.test_image = self.test_image[None, ...]
+            self.test_image = tf.convert_to_tensor(self.test_image)
+            with tf.GradientTape() as tape:
+                tape.watch(self.test_image)
+                self.prediction = self.model.predict(self.test_image.eval())
+                self.loss = self.loss_object(self.test_labels[i, :], self.prediction[0, :])
+                self.gradients = tape.gradient(self.loss, self.test_image)
                 self.signed_grads = tf.sign(self.gradients)
+
+        # for i in range(self.test_images.shape[0]):
+        #     self.test_images = self.test_images[:, :, :, 0]
+        #     self.test_image = self.test_images[i, :]
+        #     self.loss = self.loss_object(self.test_labels[i, :], self.predictions[i, :])
+        #     self.gradients = tf.gradients(self.loss, tf.convert_to_tensor(self.test_image))
+        #     self.signed_grads = tf.sign(self.gradients)
 
         return self.signed_grads
 
