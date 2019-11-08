@@ -3,7 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
-import data as datagen
+import sys
+sys.path.append('../')
+from package import data as datagen
 
 def load_train_images():
     (train_data, val_data, test_data) = datagen.get_data_web([6,7], 0, [8,8], 2, sample_size=1000)
