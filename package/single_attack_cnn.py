@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 model = torch.load('../trained_models/samp1000_size8_dig67.pth')
 model.eval()
 
-inputfile = '../adver_attack/size8/pair67_dig7_ind5.npy'
+inputfile = '../adver_attack/size8/pair67_dig6_ind3.npy'
 inputdigit_smaller = []
 
-epsilons = [0, 0.1, 0.13, 0.14, 0.15, 0.16, 0.18, 0.20, 0.25, 0.30]
+epsilons = [0, 0.05, 0.1, 0.11, 0.12, 0.13, 0.14, 0.18, 0.20, 0.25, 0.30]
 
 
 def path_leaf(path):
@@ -109,6 +109,7 @@ if inputdigit_smaller[0] == 0:
 else:
     plt.plot(epsilons, confidence[:,0], "*-")
 plt.yticks(np.arange(0, 1.1, step=0.1))
+plt.ylim([0,1.0])
 plt.xticks(np.arange(0, .35, step=0.05))
 plt.axhline(y=0.5, color='r', linestyle='-', linewidth=0.8)
 plt.title(inputfile)
