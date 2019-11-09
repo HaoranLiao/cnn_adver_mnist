@@ -59,12 +59,8 @@ class Net(nn.Module):
         x = self.fc3(x) #[samp, 2]
         x = self.sigmoid(x)
         return x
-    
-(train_images, train_labels, test_images, test_labels) = load_train_images()
-network = Net()
-optimizer = optim.Adam(network.parameters())
 
-def train():
+def train(network, optimizer, train_images, train_labels):
   network.train()
   batch_idx = 0
   batch_iter_train = datagen.batch_generator(train_images, train_labels, 100)
@@ -76,7 +72,7 @@ def train():
       loss.backward()
       optimizer.step()
       
-def test():
+def test(network, test_images, test_labels):
   network.eval()
   test_loss = 0
   correct = 0
@@ -99,11 +95,19 @@ def get_accuracy(output, target):
     accuracy = num_correct / total
     return accuracy
 
-print('Test Accuracy: %.3f'%test())
-for epoch in range(1, 101):
-  print('Epoch: %s'%epoch)
-  train()
-  print('Test Accuracy: %.3f'%test())
-  
-#torch.save(network, './trained/samp1000_size8_dig67.pth')
-#print('Model saved')
+def main():
+    (train_images, train_labels, test_images, test_labels) = load_train_images()
+    network = Net()
+    optimizer = optim.Adam(network.parameters())
+    
+    print('Test Accuracy: %.3f'%test(network, test_images, test_labels))
+    for epoch in range(1, 101):
+      print('Epoch: %s'%epoch)
+      train(network, optimizer, train_images, train_labels)
+      print('Test Accuracy: %.3f'%test(network, test_images, test_labels))
+    
+    torch.save(network.state_dict(), '../trained_models/samp1000_size8_dig67.pth')
+    print('Model saved')
+    
+if __name__ == "__main__":
+    main()
