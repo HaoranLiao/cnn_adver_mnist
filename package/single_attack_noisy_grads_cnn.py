@@ -11,11 +11,11 @@ model = train_cnn_size16.Net()
 model.load_state_dict(torch.load('../trained_models/samp2500_size16_dig67.pth'))
 model.eval()
 
-inputfile = '../adver_attack/size16/pair67_dig6_ind3_size16.npy'
+inputfile = '../adver_attack/size16_noisy_grads/pair67_dig6_ind3_size16.npy'
 inputdigit_smaller = []
 
 #7_ind5, 7_ind12
-#epsilons = [0, 0.1, 0.15,0.20,.21,0.22, .23,0.24, 0.25,.26, 0.30,.4,.5]
+#epsilons = [0, 0.1, 0.15,0.20,0.22, .23,0.24, 0.25,.26, 0.30,.4,.5]
 #6_ind3
 epsilons = [0, 0.1, 0.15,.16,.17,.18,.19,0.20,0.22,0.24,.26, 0.30,.4,.5]
 
@@ -48,11 +48,21 @@ def save_image(image, inputfile, epsilon, confidence, acc):
     plt.imshow(image)
     plt.title(
         str(epsilon)+'_'+str(confidence)+'_'+'%.2f'%acc)
-    outfn = inputfile[0:-4]+'_att%.2f'%epsilon
+    outfn = inputfile[0:-4]+'_att%.2f_noisy'%epsilon
     plt.savefig(outfn+'.png')
-    np.save(outfn, image)
 
-def fgsm_attack(image, epsilon, data_grad):
+def fgsm_attack_noisy_grads(image, epsilon, data_grad):
+    noise = torch.from_numpy(
+            np.random.normal(
+            loc=0,
+            scale=1e-5,
+            size=(data_grad.numpy().shape[0], 
+                  data_grad.numpy().shape[1], 
+                  data_grad.numpy().shape[2],
+                  data_grad.numpy().shape[3])
+            )
+    ).to(dtype=torch.float32)
+    data_grad = data_grad + noise
     sign_data_grad = data_grad.sign()
     perturbed_image = image + epsilon * sign_data_grad
     perturbed_image = torch.clamp(perturbed_image, 0, 1)
@@ -75,7 +85,7 @@ def test(model, test_loader, epsilon):
         model.zero_grad()
         loss.backward()
         data_grad = data.grad.data
-        perturbed_data = fgsm_attack(data, epsilon, data_grad)
+        perturbed_data = fgsm_attack_noisy_grads(data, epsilon, data_grad)
         pert_output = model(perturbed_data)
         
         confidence.append(list(pert_output.detach().numpy()[0]))
@@ -123,21 +133,6 @@ plt.axhline(y=0.5, color='r', linestyle='-', linewidth=0.8)
 plt.title(inputfile)
 plt.xlabel("Epsilon")
 plt.ylabel("Confidence")
-plt.savefig(inputfile[0:-4]+'_conf.png')
+plt.savefig(inputfile[0:-4]+'_noisy_conf.png')
 
     
-#cnt = 0
-#plt.figure(figsize=(8,10))
-#for i in range(len(epsilons)):
-#    for j in range(len(examples[i])):
-#        cnt += 1
-#        plt.subplot(len(epsilons),len(examples[0]),cnt)
-#        plt.xticks([], [])
-#        plt.yticks([], [])
-#        if j == 0:
-#            plt.ylabel("Eps: {}".format(epsilons[i]), fontsize=14)
-#        orig,adv,ex = examples[i][j]
-#        plt.title("{} -> {}".format(orig, adv))
-#        plt.imshow(ex, cmap="gray")
-#plt.tight_layout()
-#plt.show()
