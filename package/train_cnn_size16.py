@@ -75,6 +75,9 @@ def train(network, optimizer, train_images, train_labels):
       output = network(data)
       loss = ((output - target)**2).mean()
       loss.backward()
+#      for p in network.parameters():
+#          if p.grad is not None:
+#              p.grad += torch.normal(torch.zeros(p.shape), torch.ones(p.shape))
       optimizer.step()
       
 def test(network, test_images, test_labels):
@@ -111,8 +114,8 @@ def main():
       train(network, optimizer, train_images, train_labels)
       print('Test Accuracy: %.3f'%test(network, test_images, test_labels))
       
-    torch.save(network.state_dict(), '../trained_models/samp2500_size16_dig67.pth')
-    print('Model saved')
+    #torch.save(network.state_dict(), '../trained_models/samp2500_size16_dig67.pth')
+    #print('Model saved')
 
   
 if __name__ == "__main__":
